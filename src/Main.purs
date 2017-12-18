@@ -2,22 +2,21 @@ module Main where
 
 import Prelude
 
+import Components.Root (ui)
 import Control.Monad.Eff (Eff)
-import Control.Monad.Eff.AVar (AVAR)
 import Control.Monad.Eff.Console (CONSOLE, log)
-import Control.Monad.Eff.Exception (EXCEPTION)
-import Control.Monad.Eff.Ref (REF)
 import DOM (DOM)
 import DOM.Classy.Element (fromElement)
 import DOM.HTML (window)
 import DOM.HTML.Types (HTMLElement, htmlDocumentToParentNode)
-import DOM.HTML.Window (document)
+import DOM.HTML.Window (document, navigator)
 import DOM.Node.ParentNode (QuerySelector(QuerySelector), querySelector)
 import DOM.Node.Types (ParentNode)
-import Data.Maybe (Maybe, maybe)
+import Data.Maybe (Maybe(Just, Nothing))
 import Halogen.Aff as HA
 import Halogen.VDom.Driver (runUI)
-import Components.Root (btnOne)
+import Media.SupportsGetUserMedia (supportsGetUserMedia)
+import Types (Env)
 
 -------------------------------------------------------------------------------
 
@@ -30,30 +29,16 @@ queryElements docNode = do
   pure (e >>= fromElement)
 
 bindDOM
-  :: forall eff
-   . HTMLElement
-  -> Eff
-    ( dom       :: DOM
-    , console   :: CONSOLE
-    , avar      :: AVAR
-    , exception :: EXCEPTION
-    , ref       :: REF
-    | eff
-    ) Unit
-bindDOM root = HA.runHalogenAff (runUI btnOne unit root)
+  :: HTMLElement
+  -> Env
+  -> Eff (HA.HalogenEffects (console :: CONSOLE)) Unit
+bindDOM root env = HA.runHalogenAff (runUI (ui env) unit root)
 
-main
-  :: forall eff
-   . Eff
-    ( dom       :: DOM
-    , console   :: CONSOLE
-    , avar      :: AVAR
-    , exception :: EXCEPTION
-    , ref       :: REF
-    | eff
-    ) Unit
-main = window
-  >>= document
-  >>= (queryElements <<< htmlDocumentToParentNode)
-  >>= maybe (log ("Could not find selector " <> rootSelector)) bindDOM
-
+main :: Eff (HA.HalogenEffects (console :: CONSOLE )) Unit
+main = do
+  doc <- window >>= document
+  nav <- window >>= navigator
+  maybeRootNode <- (queryElements <<< htmlDocumentToParentNode) doc
+  case maybeRootNode of
+    Nothing       -> log $ "Could not find selector " <> rootSelector
+    Just rootNode -> bindDOM rootNode { hasGetUserMedia : supportsGetUserMedia nav }

@@ -22,6 +22,7 @@ UX
 ----
 
 If we fail to have the required browser features, we should show a "please use another browser"
+- [ ] style that empty state
 - [ ] nojs
 Given the required features are available, we see
 - [ ] a record button

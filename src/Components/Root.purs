@@ -5,19 +5,18 @@ import Prelude
 import Data.Maybe (Maybe(Nothing))
 import Halogen as H
 import Halogen.HTML as HH
-import Halogen.HTML.Events as HE
-import Halogen.HTML.Properties as HP
+import Types (Env)
 
 type State = Boolean
 
-data Query a = Toggle a | IsOn (Boolean -> a)
+data Query a = Passthrough a
 
 type Input = Unit
 
-data Message = Toggled Boolean
+data Message = Void
 
-btnOne :: forall m. H.Component HH.HTML Query Input Message m
-btnOne = H.component
+ui :: forall m. Env -> H.Component HH.HTML Query Input Message m
+ui env = H.component
   { initialState: const initialState
   , render
   , eval
@@ -25,26 +24,16 @@ btnOne = H.component
   }
   where
   initialState :: State
-  initialState = false
+  initialState = env.hasGetUserMedia
 
   render :: State -> H.ComponentHTML Query
   render state =
-    let
-      label = if state then "On" else "Off"
-    in
-      HH.button [ HP.title label
-                , HE.onClick (HE.input_ Toggle)
-                ]
-                [ HH.text label ]
+    if state
+      then HH.div [] [ HH.h2_ [ HH.text "Supports getUserMedia" ] ]
+      else HH.div [] [ HH.h2_ [ HH.text "I was not able to find the features necessary for this app to work" ] ]
 
   eval :: Query ~> H.ComponentDSL State Query Message m
-  eval = case _ of
-    Toggle next -> do
-      state <- H.get
-      let nextState = not state
-      H.put nextState
-      H.raise $ Toggled nextState
-      pure next
-    IsOn reply -> do
-      state <- H.get
-      pure (reply state)
+  eval (Passthrough next) = do
+     s <- H.get
+     H.put s
+     pure next

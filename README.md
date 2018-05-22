@@ -7,7 +7,7 @@ Todo
 ----
 
 - [ ] Add LICENCE
-- [ ] env : show browser warning if feature not available
+- [/] env : show browser warning if feature not available
 - [ ] button click -> prompt for microphone
 - [ ] with microphone access, show record button
 - [ ] record to blob

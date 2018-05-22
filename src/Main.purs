@@ -17,6 +17,7 @@ import Halogen.Aff as HA
 import Halogen.VDom.Driver (runUI)
 import Media.SupportsGetUserMedia (supportsGetUserMedia)
 import Types (Env)
+import Media.GetUserMedia (WEBRTC)
 
 -------------------------------------------------------------------------------
 
@@ -31,10 +32,10 @@ queryElements docNode = do
 bindDOM
   :: HTMLElement
   -> Env
-  -> Eff (HA.HalogenEffects (console :: CONSOLE)) Unit
+  -> Eff (HA.HalogenEffects (console :: CONSOLE, webrtc :: WEBRTC)) Unit
 bindDOM root env = HA.runHalogenAff (runUI (ui env) unit root)
 
-main :: Eff (HA.HalogenEffects (console :: CONSOLE )) Unit
+main :: Eff (HA.HalogenEffects (console :: CONSOLE, webrtc :: WEBRTC )) Unit
 main = do
   doc <- window >>= document
   nav <- window >>= navigator

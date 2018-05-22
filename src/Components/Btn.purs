@@ -2,11 +2,14 @@ module Components.Btn where
 
 import Prelude
 
-import Data.Maybe (Maybe(Nothing), maybe)
+import Control.Monad.Eff (Eff())
+import Control.Monad.Aff (Aff)
+import Data.Maybe (Maybe(Nothing, Just), maybe)
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
+import Media.GetUserMedia (getUserMedia, WEBRTC)
 import Types (MediaStream)
 
 type State = { isRecording :: Boolean
@@ -37,7 +40,7 @@ data Message = Toggled Boolean
 -- error: present
 -- stream: absent
 
-btnRecord :: forall m. H.Component HH.HTML Query Input Message m
+btnRecord :: forall eff. H.Component HH.HTML Query Input Message (Aff (webrtc :: WEBRTC | eff))
 btnRecord = H.component
   { initialState: const initialState
   , render
@@ -59,14 +62,28 @@ btnRecord = H.component
                 [ HP.title label , HE.onClick (HE.input_ Toggle) ]
                 [ HH.text label ]
               , HH.p_
-                [ HH.text (maybe "No error" show state.error) ]
+                [ HH.text (maybe "" show state.error) ]
               ]
 
-  eval :: Query ~> H.ComponentDSL State Query Message m
+  eval :: Query ~> H.ComponentDSL State Query Message (Aff (webrtc :: WEBRTC | eff))
   eval = case _ of
     Toggle next -> do
       state <- H.get
+      _ <- H.liftEff (xxx state)
+
       let nextState = state { isRecording = not state.isRecording }
       H.put nextState
       H.raise $ Toggled nextState.isRecording
       pure next
+
+
+-- Rather than be Eff e Unit, this wants to be Eff e state
+-- where the state contains a possible reference to the mediastream
+
+
+xxx :: forall eff. State -> Eff (webrtc :: WEBRTC | eff) Unit
+xxx state = getUserMedia onSuccess onErr where
+  onSuccess m = pure unit
+  onErr e = pure unit
+
+

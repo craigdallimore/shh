@@ -1,11 +1,11 @@
 "use strict";
 
-exports.getUserMedia = function(onSuccess) {
-  return function(onError) {
-    return navigator.getUserMedia(
-      { audio: true },
-      function(s) { onSuccess(s)() },
-      function(e) { onError(e)() }
-    );
+exports._getUserMedia = function(onError, onSuccess) {
+  navigator.mediaDevices.getUserMedia({ audio: true })
+    .then(onSuccess)
+    .catch(onError);
+
+  return function(cancelError, cancellerError, cancellerSuccess) {
+    cancellerSuccess();
   };
 };
